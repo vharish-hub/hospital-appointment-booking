@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Manage Patients')}"></head>
+<body class="bg-light">
+
+<div th:replace="~{fragments/layout :: navbar}"></div>
+
+<div class="container py-5">
+    <div class="row g-4">
+        <!-- --- SIDEBAR NAV --- -->
+        <div class="col-lg-3">
+            <div class="glass-card p-4 shadow-sm mb-4 border-0">
+                <h5 class="fw-bold mb-4 text-primary"><i class="fa-solid fa-user-shield me-2"></i>Administration</h5>
+                <div class="list-group list-group-flush gap-2">
+                    <a th:href="@{/admin/dashboard}" class="list-group-item list-group-item-action border-0 rounded-3 py-3">
+                        <i class="fa-solid fa-chart-line me-2"></i>Overview Analytics
+                    </a>
+                    <a th:href="@{/admin/doctors}" class="list-group-item list-group-item-action border-0 rounded-3 py-3">
+                        <i class="fa-solid fa-user-md me-2"></i>Manage Doctors
+                    </a>
+                    <a th:href="@{/admin/patients}" class="list-group-item list-group-item-action border-0 rounded-3 py-3 active">
+                        <i class="fa-solid fa-users me-2"></i>Manage Patients
+                    </a>
+                    <a th:href="@{/admin/appointments}" class="list-group-item list-group-item-action border-0 rounded-3 py-3">
+                        <i class="fa-solid fa-calendar-check me-2"></i>Manage Bookings
+                    </a>
+                    <a th:href="@{/admin/reports}" class="list-group-item list-group-item-action border-0 rounded-3 py-3">
+                        <i class="fa-solid fa-file-invoice-dollar me-2"></i>Audit Reports
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- --- MAIN CONTENT AREA: PATIENTS CRUD --- -->
+        <div class="col-lg-9">
+            <div class="glass-card p-5 border-0 shadow-sm">
+                <h4 class="fw-bold mb-4"><i class="fa-solid fa-users text-primary me-2"></i>Registered Patients Registry</h4>
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Name</th>
+                                <th>Contact Information</th>
+                                <th>Gender / Age</th>
+                                <th>Residential Address</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="pat : ${patients}">
+                                <td>
+                                    <h6 class="fw-bold mb-0" th:text="${pat.fullName}">Patient Name</h6>
+                                    <small class="text-muted" th:text="'DOB: ' + ${pat.dob}">DOB</small>
+                                </td>
+                                <td>
+                                    <div class="small"><i class="fa-solid fa-envelope me-1 text-muted"></i><span th:text="${pat.email}"></span></div>
+                                    <div class="small text-muted"><i class="fa-solid fa-phone me-1 text-muted"></i><span th:text="${pat.phone}"></span></div>
+                                </td>
+                                <td>
+                                    <span th:text="${pat.gender}">Gender</span>
+                                    <small class="text-muted d-block" th:text="'(' + ${2026 - pat.dob.year} + ' Yrs)'"></small>
+                                </td>
+                                <td class="small text-muted" th:text="${pat.address}">Address</td>
+                                <td class="text-end">
+                                    <button class="btn btn-outline-danger btn-sm" th:onclick="'deletePatient(' + ${pat.id} + ')'">
+                                        <i class="fa-solid fa-trash-can"></i> Delete
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div th:if="${patients.isEmpty()}" class="text-center py-5 text-muted">
+                    <i class="fa-solid fa-users-slash fa-3x mb-3 text-muted"></i>
+                    <h5>No Patients Registered</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{fragments/layout :: footer}"></div>
+
+<script>
+    // URL Success/Error parsing
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('success')) {
+        Swal.fire('Removed', 'Patient profile has been deleted.', 'success');
+    } else if (urlParams.has('error')) {
+        Swal.fire('Error', urlParams.get('error'), 'error');
+    }
+
+    function deletePatient(id) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "This removes the patient account and cancelled all their pending appointments.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: 'Yes, delete patient'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const form = document.createElement("form");
+                form.method = "POST";
+                form.action = `/admin/patients/delete/${id}`;
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    }
+</script>
+</body>
+</html>

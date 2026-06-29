@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Home')}"></head>
+<body>
+
+<div th:replace="~{fragments/layout :: navbar}"></div>
+
+<!-- --- HERO SECTION --- -->
+<section class="hero-section d-flex align-items-center">
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6">
+                <span class="badge bg-primary-subtle text-primary fw-bold px-3 py-2 rounded-pill mb-3">
+                    <i class="fa-solid fa-sparkles me-1"></i>Welcome to MediCare Hospital
+                </span>
+                <h1 class="hero-title fw-extrabold">Your Health Is Our Top Priority</h1>
+                <p class="lead text-muted mb-4">Experience world-class healthcare with specialized professionals, state-of-the-art medical technology, and seamless, instant online appointment scheduling.</p>
+                <div class="d-flex flex-wrap gap-3">
+                    <a th:href="@{/book-appointment}" class="btn btn-primary btn-lg px-4 py-3 rounded-3 shadow fw-semibold">
+                        <i class="fa-solid fa-calendar-check me-2"></i>Book Appointment
+                    </a>
+                    <a href="tel:+1234567890" class="btn btn-outline-danger btn-lg px-4 py-3 rounded-3 fw-semibold">
+                        <i class="fa-solid fa-phone-alt me-2"></i>Emergency Hotlines
+                    </a>
+                </div>
+
+                <!-- Fast Search Doctor Widget -->
+                <div class="glass-card p-4 mt-5">
+                    <h5 class="fw-bold mb-3"><i class="fa-solid fa-magnifying-glass text-primary me-2"></i>Quick Doctor Search</h5>
+                    <form th:action="@{/doctors}" method="get" class="row g-2">
+                        <div class="col-md-8">
+                            <input type="text" name="search" class="form-control py-2" placeholder="Search by doctor name or specialty...">
+                        </div>
+                        <div class="col-md-4">
+                            <button type="submit" class="btn btn-primary w-100 py-2"><i class="fa-solid fa-search me-1"></i>Search</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="col-lg-6 d-none d-lg-block text-center">
+                <img src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&q=80&w=600" class="img-fluid rounded-4 shadow" alt="Doctor Team" style="max-height: 480px; object-fit: cover;">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- --- STATS COUNTERS --- -->
+<section class="py-5 bg-primary-subtle text-primary">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-md-3 col-6">
+                <div class="counter-box">
+                    <div class="counter-value" th:text="${totalDoctors} + '+'">15+</div>
+                    <div class="text-muted fw-semibold">Expert Doctors</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="counter-box">
+                    <div class="counter-value" th:text="${totalPatients} + '+'">150+</div>
+                    <div class="text-muted fw-semibold">Happy Patients</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="counter-box">
+                    <div class="counter-value" th:text="${totalDepartments}">8</div>
+                    <div class="text-muted fw-semibold">Departments</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="counter-box">
+                    <div class="counter-value" th:text="${successfulTreatments} + '+'">9500+</div>
+                    <div class="text-muted fw-semibold">Successful Cases</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- --- FEATURED DEPARTMENTS --- -->
+<section id="departments" class="py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="text-primary fw-bold text-uppercase tracking-wider">Our Services</span>
+            <h2 class="fw-bold mt-2">Clinical Departments</h2>
+            <p class="text-muted col-lg-6 mx-auto">Explore our range of specialized clinics staffed with industry-leading medical professionals.</p>
+        </div>
+        <div class="row g-4">
+            <div th:each="dept, iter : ${departments}" class="col-lg-3 col-md-6">
+                <div class="glass-card p-4 h-100 d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="btn btn-primary-subtle p-3 rounded-3 text-primary mb-3">
+                            <i th:class="${iter.index == 0 ? 'fa-solid fa-heart-pulse fa-2x' : 
+                                           iter.index == 1 ? 'fa-solid fa-brain fa-2x' : 
+                                           iter.index == 2 ? 'fa-solid fa-bone fa-2x' : 
+                                           iter.index == 3 ? 'fa-solid fa-baby fa-2x' : 
+                                           iter.index == 4 ? 'fa-solid fa-allergies fa-2x' : 
+                                           iter.index == 5 ? 'fa-solid fa-stethoscope fa-2x' : 
+                                           iter.index == 6 ? 'fa-solid fa-head-side-cough fa-2x' : 
+                                           'fa-solid fa-hand-holding-medical fa-2x'}"></i>
+                        </div>
+                        <h5 class="fw-bold" th:text="${dept.departmentName}">Cardiology</h5>
+                        <p class="text-muted small" th:text="${dept.description}">Specialized care for heart conditions.</p>
+                    </div>
+                    <a th:href="@{/doctors(department=${dept.id})}" class="btn btn-link text-primary p-0 fw-semibold text-decoration-none mt-3">
+                        View Doctors <i class="fa-solid fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- --- FEATURED DOCTORS --- -->
+<section class="py-5 bg-light-subtle">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="text-primary fw-bold text-uppercase tracking-wider">Meet Our team</span>
+            <h2 class="fw-bold mt-2">Featured Specialist Doctors</h2>
+            <p class="text-muted col-lg-6 mx-auto">Book directly with our top-rated specialists for customized consultation.</p>
+        </div>
+        <div class="row g-4">
+            <div th:each="doc : ${featuredDoctors}" class="col-lg-4">
+                <div class="glass-card h-100 overflow-hidden d-flex flex-column justify-content-between">
+                    <div>
+                        <img th:src="${doc.id == 1 ? 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=400' : 
+                                     doc.id == 2 ? 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=400' : 
+                                     'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=400'}" 
+                             class="card-img-top doctor-card-img" alt="Doctor profile">
+                        <div class="p-4">
+                            <span class="badge bg-primary-subtle text-primary mb-2" th:text="${doc.department.departmentName}">Cardiology</span>
+                            <h5 class="fw-bold" th:text="${doc.name}">Dr. Sarah Connor</h5>
+                            <p class="text-muted small mb-1" th:text="${doc.qualification}">MD, FACC</p>
+                            <p class="text-muted small mb-3"><i class="fa-solid fa-briefcase text-primary me-2"></i><span th:text="${doc.experience}">15</span> years experience</p>
+                            <p class="text-muted small" th:text="${doc.availability}">Available Days</p>
+                        </div>
+                    </div>
+                    <div class="p-4 pt-0">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="fw-bold text-primary" th:text="'$' + ${doc.consultationFee} + ' Fee'">$150 Fee</span>
+                            <span class="text-warning"><i class="fa-solid fa-star me-1"></i>5.0</span>
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <a th:href="@{/doctors/{id}(id=${doc.id})}" class="btn btn-outline-secondary btn-sm w-100 py-2 rounded-3">Profile</a>
+                            </div>
+                            <div class="col-6">
+                                <a th:href="@{/book-appointment}" class="btn btn-primary btn-sm w-100 py-2 rounded-3">Book Slot</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- --- TESTIMONIALS --- -->
+<section class="py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="text-primary fw-bold text-uppercase tracking-wider">Reviews</span>
+            <h2 class="fw-bold mt-2">What Our Patients Say</h2>
+        </div>
+        <div id="testimonialCarousel" class="carousel slide" data-bs-ride="carousel">
+            <div class="carousel-inner col-lg-8 mx-auto">
+                <div class="carousel-item active">
+                    <div class="glass-card p-5 text-center shadow-sm">
+                        <i class="fa-solid fa-quote-left text-primary fa-3x mb-4 opacity-50"></i>
+                        <p class="lead italic mb-4">"The booking platform is incredibly simple. I scheduled my cardiology session in under 2 minutes, and the live queue tracker let me arrive exactly on time without waiting."</p>
+                        <h6 class="fw-bold mb-1">John Doe</h6>
+                        <small class="text-muted">Cardiology Patient</small>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <div class="glass-card p-5 text-center shadow-sm">
+                        <i class="fa-solid fa-quote-left text-primary fa-3x mb-4 opacity-50"></i>
+                        <p class="lead italic mb-4">"Dr. Xavier was amazing. The system sent me a reminder 24 hours prior, and download PDF receipts allowed me to easily claim my insurance. Very modern!"</p>
+                        <h6 class="fw-bold mb-1">Jane Smith</h6>
+                        <small class="text-muted">Neurology Patient</small>
+                    </div>
+                </div>
+            </div>
+            <button class="carousel-control-prev" type="button" data-bs-target="#testimonialCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon bg-primary rounded-circle" aria-hidden="true"></span>
+                <span class="visually-hidden">Previous</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#testimonialCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon bg-primary rounded-circle" aria-hidden="true"></span>
+                <span class="visually-hidden">Next</span>
+            </button>
+        </div>
+    </div>
+</section>
+
+<!-- --- GALLERY --- -->
+<section class="py-5 bg-light-subtle">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="text-primary fw-bold text-uppercase tracking-wider">Our Campus</span>
+            <h2 class="fw-bold mt-2">MediCare Campus & Facilities</h2>
+        </div>
+        <div id="galleryCarousel" class="carousel slide rounded-4 overflow-hidden shadow col-lg-10 mx-auto" data-bs-ride="carousel">
+            <div class="carousel-inner">
+                <div class="carousel-item active">
+                    <img src="https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80&w=1000&h=400" class="d-block w-100" alt="Lobby" style="object-fit: cover; max-height: 400px;">
+                    <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 rounded p-3">
+                        <h5>Modern Waiting Lounge</h5>
+                        <p>Relax in our comfortable, high-resolution premium waiting lounge designed for optimal comfort.</p>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <img src="https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&q=80&w=1000&h=400" class="d-block w-100" alt="Ward" style="object-fit: cover; max-height: 400px;">
+                    <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 rounded p-3">
+                        <h5>ICU & Surgery Wards</h5>
+                        <p>Fully equipped medical theatres running state-of-the-art machinery and diagnostic tools.</p>
+                    </div>
+                </div>
+            </div>
+            <button class="carousel-control-prev" type="button" data-bs-target="#galleryCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Previous</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#galleryCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Next</span>
+            </button>
+        </div>
+    </div>
+</section>
+
+<div th:replace="~{fragments/layout :: footer}"></div>
+
+</body>
+</html>

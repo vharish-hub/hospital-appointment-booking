@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Doctor Dashboard')}"></head>
+<body class="bg-light">
+
+<div th:replace="~{fragments/layout :: navbar}"></div>
+
+<div class="container py-5">
+    <!-- --- WEBSOCKET LIVE QUEUE TRACKER WIDGET --- -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="glass-card p-4 text-white queue-card shadow-sm border-0 d-flex flex-wrap align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="btn btn-light rounded-circle p-3 text-primary"><i class="fa-solid fa-people-group fa-2x"></i></div>
+                    <div>
+                        <h4 class="fw-bold mb-1">Live Appointment Queue Tracker</h4>
+                        <p class="mb-0 text-white-50">Real-time status of patients currently waiting at the clinic lounge</p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-4 mt-3 mt-md-0">
+                    <div class="text-center bg-white bg-opacity-25 px-4 py-3 rounded-3">
+                        <span class="small text-white-50 d-block">CURRENT SERVED TOKEN</span>
+                        <h2 class="fw-bold font-monospace mb-0" id="currentTokenDisp">Loading...</h2>
+                    </div>
+                    <div class="text-center bg-white bg-opacity-25 px-4 py-3 rounded-3">
+                        <span class="small text-white-50 d-block">ESTIMATED WAITING TIME</span>
+                        <h6 class="fw-bold font-monospace mb-0" id="waitingTimeDisp">-- mins</h6>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- --- SIDEBAR CLINIC STATS --- -->
+        <div class="col-lg-4">
+            <div class="glass-card p-4 shadow-sm mb-4 border-0">
+                <div class="text-center mb-4">
+                    <img th:src="${doctor.id == 1 ? 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=400' : 
+                                 doctor.id == 2 ? 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=400' : 
+                                 doctor.id == 3 ? 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=400' :
+                                 doctor.id == 4 ? 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&q=80&w=400' :
+                                 'https://images.unsplash.com/photo-1594824813573-246434de83fb?auto=format&fit=crop&q=80&w=400'}"
+                         class="rounded-circle border border-primary border-3 mb-3" style="width: 100px; height: 100px; object-fit: cover;" alt="Profile">
+                    <h4 class="fw-bold mb-1" th:text="${doctor.name}">Dr. Name</h4>
+                    <span class="badge bg-primary-subtle text-primary px-3 py-1 fw-semibold" th:text="${doctor.department.departmentName}">Cardiology</span>
+                </div>
+                <hr class="my-4 opacity-25">
+                <div class="small text-muted mb-3"><i class="fa-solid fa-envelope text-primary me-2"></i><span th:text="${doctor.email}">email</span></div>
+                <div class="small text-muted mb-3"><i class="fa-solid fa-briefcase text-primary me-2"></i>Experience: <span th:text="${doctor.experience}"></span> Years</div>
+                <div class="small text-muted mb-3"><i class="fa-solid fa-dollar-sign text-primary me-2"></i>Consultation Fee: $<span th:text="${doctor.consultationFee}"></span></div>
+                <div class="small text-muted"><i class="fa-solid fa-calendar-check text-primary me-2"></i>Days: <span th:text="${doctor.availability}"></span></div>
+            </div>
+
+            <!-- Set Availability Card -->
+            <div class="glass-card p-4 border-0 shadow-sm">
+                <h5 class="fw-bold mb-3"><i class="fa-solid fa-clock text-primary me-2"></i>Update Clinic Days</h5>
+                <form th:action="@{/doctor/availability/update}" method="post">
+                    <div class="mb-3">
+                        <label class="form-label small text-muted">Availability Days Text</label>
+                        <input type="text" name="availability" class="form-control" th:value="${doctor.availability}" placeholder="Monday, Wednesday, Friday..." required>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-sm w-100 py-2">Update Schedule</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- --- MAIN CONTENT AREA: WORKFLOWS --- -->
+        <div class="col-lg-8">
+            <div class="glass-card p-5 border-0 shadow-sm">
+                <!-- Navigation Tabs -->
+                <ul class="nav nav-pills mb-4 gap-2" id="doctorTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active rounded-pill fw-semibold px-4 py-2" id="today-tab" data-bs-toggle="tab" data-bs-target="#todayPanel" type="button">
+                            Today (<span th:text="${todayApps.size()}">0</span>)
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link rounded-pill fw-semibold px-4 py-2" id="upcoming-tab" data-bs-toggle="tab" data-bs-target="#upcomingPanel" type="button">
+                            Upcoming (<span th:text="${upcoming.size()}">0</span>)
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link rounded-pill fw-semibold px-4 py-2" id="completed-tab" data-bs-toggle="tab" data-bs-target="#completedPanel" type="button">
+                            Completed History (<span th:text="${completed.size()}">0</span>)
+                        </button>
+                    </li>
+                </ul>
+
+                <!-- Tabs Content -->
+                <div class="tab-content" id="doctorTabsContent">
+
+                    <!-- TODAY APPOINTMENTS PANEL -->
+                    <div class="tab-pane fade show active" id="todayPanel">
+                        <div class="row g-3">
+                            <div th:each="app : ${todayApps}" class="col-12">
+                                <div class="p-4 bg-light rounded-3 shadow-sm border-start border-4 d-flex flex-wrap justify-content-between align-items-center"
+                                     th:classappend="${app.status == 'PENDING' ? 'border-warning' : 
+                                                      app.status == 'CONFIRMED' ? 'border-success' : 
+                                                      app.status == 'COMPLETED' ? 'border-primary' : 'border-danger'}">
+                                    <div>
+                                        <div class="d-flex align-items-center gap-2 mb-2">
+                                            <span class="status-badge" 
+                                                  th:classappend="${app.status == 'PENDING' ? 'badge-pending' : 
+                                                                   app.status == 'CONFIRMED' ? 'badge-confirmed' : 
+                                                                   app.status == 'COMPLETED' ? 'badge-completed' : 'badge-cancelled'}"
+                                                  th:text="${app.status}">PENDING</span>
+                                            <span class="fw-bold font-monospace text-primary" th:text="'Token #' + ${app.tokenNumber}">Token #1</span>
+                                            <span class="small text-muted" th:text="'Slot: ' + ${app.appointmentTime}">Slot: 10:00 AM</span>
+                                        </div>
+                                        <h5 class="fw-bold mb-1" th:text="${app.patient.fullName}">Patient Name</h5>
+                                        <p class="text-secondary small mb-0"><i class="fa-solid fa-phone me-1"></i><span th:text="${app.patient.phone}">Phone</span> | Age: <span th:text="${2026 - app.patient.dob.year}">28</span></p>
+                                    </div>
+                                    <div class="d-flex gap-2 mt-3 mt-md-0" th:if="${app.status == 'PENDING' || app.status == 'CONFIRMED'}">
+                                        <!-- Accept -->
+                                        <form th:if="${app.status == 'PENDING'}" th:action="@{/doctor/appointments/{id}/status(id=${app.id})}" method="post">
+                                            <input type="hidden" name="status" value="CONFIRMED">
+                                            <button type="submit" class="btn btn-success btn-sm rounded-3 px-3"><i class="fa-solid fa-check"></i> Accept</button>
+                                        </form>
+                                        <!-- Complete -->
+                                        <form th:if="${app.status == 'CONFIRMED'}" th:action="@{/doctor/appointments/{id}/status(id=${app.id})}" method="post">
+                                            <input type="hidden" name="status" value="COMPLETED">
+                                            <button type="submit" class="btn btn-primary btn-sm rounded-3 px-3"><i class="fa-solid fa-circle-check"></i> Complete</button>
+                                        </form>
+                                        <!-- Reject/Cancel -->
+                                        <form th:action="@{/doctor/appointments/{id}/status(id=${app.id})}" method="post">
+                                            <input type="hidden" name="status" value="CANCELLED">
+                                            <button type="submit" class="btn btn-outline-danger btn-sm rounded-3 px-3"><i class="fa-solid fa-times"></i> Reject</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div th:if="${todayApps.isEmpty()}" class="text-center py-5 text-muted col-12">
+                                <i class="fa-solid fa-stethoscope fa-3x mb-3 text-muted"></i>
+                                <h5>No Consultations Scheduled Today</h5>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- UPCOMING PANEL -->
+                    <div class="tab-pane fade" id="upcomingPanel">
+                        <div class="row g-3">
+                            <div th:each="app : ${upcoming}" class="col-12">
+                                <div class="p-4 bg-light rounded-3 shadow-sm border-start border-4 d-flex justify-content-between align-items-center"
+                                     th:classappend="${app.status == 'PENDING' ? 'border-warning' : 'border-success'}">
+                                    <div>
+                                        <div class="d-flex align-items-center gap-2 mb-2">
+                                            <span class="status-badge" th:classappend="${app.status == 'PENDING' ? 'badge-pending' : 'badge-confirmed'}" th:text="${app.status}">PENDING</span>
+                                            <span class="fw-bold font-monospace text-primary" th:text="'Token #' + ${app.tokenNumber}">Token #1</span>
+                                        </div>
+                                        <h5 class="fw-bold mb-1" th:text="${app.patient.fullName}">Patient Name</h5>
+                                        <p class="text-secondary small mb-0"><i class="fa-solid fa-calendar me-1"></i><span th:text="${app.appointmentDate}"></span> | <i class="fa-solid fa-clock me-1"></i><span th:text="${app.appointmentTime}"></span></p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div th:if="${upcoming.isEmpty()}" class="text-center py-5 text-muted col-12">
+                                <i class="fa-solid fa-calendar-alt fa-3x mb-3 text-muted"></i>
+                                <h5>No Upcoming Consultations Scheduled</h5>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- COMPLETED PANEL -->
+                    <div class="tab-pane fade" id="completedPanel">
+                        <div class="row g-3">
+                            <div th:each="app : ${completed}" class="col-12">
+                                <div class="p-4 bg-light rounded-3 shadow-sm border-start border-info border-4">
+                                    <div class="d-flex align-items-center gap-2 mb-2">
+                                        <span class="status-badge badge-completed" th:text="${app.status}">COMPLETED</span>
+                                    </div>
+                                    <h5 class="fw-bold mb-1" th:text="${app.patient.fullName}">Patient Name</h5>
+                                    <p class="text-secondary small mb-0"><i class="fa-solid fa-calendar me-1"></i><span th:text="${app.appointmentDate}"></span> | <i class="fa-solid fa-clock me-1"></i><span th:text="${app.appointmentTime}"></span></p>
+                                </div>
+                            </div>
+                            
+                            <div th:if="${completed.isEmpty()}" class="text-center py-5 text-muted col-12">
+                                <i class="fa-solid fa-folder-open fa-3x mb-3 text-muted"></i>
+                                <h5>No Historic Consultations</h5>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{fragments/layout :: footer}"></div>
+
+<!-- SockJS & Stomp Libraries -->
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+<script th:inline="javascript">
+    const doctorId = /*[[${doctor.id}]]*/ 0;
+    
+    // Connect WebSocket
+    function connectQueueWebSocket() {
+        var socket = new SockJS('/ws');
+        var stompClient = Stomp.over(socket);
+        // Disable console logs for STOMP to avoid cluttering
+        stompClient.debug = null;
+        
+        stompClient.connect({}, function (frame) {
+            stompClient.subscribe('/topic/queue/' + doctorId, function (payload) {
+                var data = JSON.parse(payload.body);
+                updateQueueDisplay(data.currentToken);
+            });
+            
+            // Trigger initial fetch of queue status
+            fetchInitialQueueStatus();
+        }, function(err) {
+            console.error("WebSocket connection lost, retrying in 5 seconds...");
+            setTimeout(connectQueueWebSocket, 5000);
+        });
+    }
+
+    function fetchInitialQueueStatus() {
+        // Find current served token from the view details
+        const todayApps = /*[[${todayApps}]]*/ [];
+        let minToken = 0;
+        
+        // Find first confirmed/pending token
+        const active = todayApps.filter(a => a.status === 'CONFIRMED' || a.status === 'PENDING')
+                                .sort((a,b) => a.tokenNumber - b.tokenNumber);
+                                
+        if (active.length > 0) {
+            minToken = active[0].tokenNumber;
+        } else {
+            const completed = todayApps.filter(a => a.status === 'COMPLETED')
+                                      .sort((a,b) => b.tokenNumber - a.tokenNumber);
+            minToken = completed.length > 0 ? completed[0].tokenNumber + 1 : 1;
+        }
+        
+        updateQueueDisplay(minToken);
+    }
+
+    function updateQueueDisplay(currentToken) {
+        document.getElementById("currentTokenDisp").innerText = currentToken;
+        
+        // Waiting time logic: say current patient takes 15 minutes
+        document.getElementById("waitingTimeDisp").innerText = "15 mins";
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        connectQueueWebSocket();
+        
+        // Flash messages
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('success')) {
+            Swal.fire('Updated', 'Record updated successfully.', 'success');
+        }
+    });
+</script>
+</body>
+</html>

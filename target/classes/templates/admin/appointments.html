@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Manage Bookings')}"></head>
+<body class="bg-light">
+
+<div th:replace="~{fragments/layout :: navbar}"></div>
+
+<div class="container py-5">
+    <div class="row g-4">
+        <!-- --- SIDEBAR NAV --- -->
+        <div class="col-lg-3">
+            <div class="glass-card p-4 shadow-sm mb-4 border-0">
+                <h5 class="fw-bold mb-4 text-primary"><i class="fa-solid fa-user-shield me-2"></i>Administration</h5>
+                <div class="list-group list-group-flush gap-2">
+                    <a th:href="@{/admin/dashboard}" class="list-group-item list-group-item-action border-0 rounded-3 py-3">
+                        <i class="fa-solid fa-chart-line me-2"></i>Overview Analytics
+                    </a>
+                    <a th:href="@{/admin/doctors}" class="list-group-item list-group-item-action border-0 rounded-3 py-3">
+                        <i class="fa-solid fa-user-md me-2"></i>Manage Doctors
+                    </a>
+                    <a th:href="@{/admin/patients}" class="list-group-item list-group-item-action border-0 rounded-3 py-3">
+                        <i class="fa-solid fa-users me-2"></i>Manage Patients
+                    </a>
+                    <a th:href="@{/admin/appointments}" class="list-group-item list-group-item-action border-0 rounded-3 py-3 active">
+                        <i class="fa-solid fa-calendar-check me-2"></i>Manage Bookings
+                    </a>
+                    <a th:href="@{/admin/reports}" class="list-group-item list-group-item-action border-0 rounded-3 py-3">
+                        <i class="fa-solid fa-file-invoice-dollar me-2"></i>Audit Reports
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- --- MAIN CONTENT AREA: APPOINTMENTS FILTER & LIST --- -->
+        <div class="col-lg-9">
+            <div class="glass-card p-5 border-0 shadow-sm">
+                <h4 class="fw-bold mb-4"><i class="fa-solid fa-calendar-check text-primary me-2"></i>Hospital Booking Registry</h4>
+
+                <!-- Filter Controls Widget -->
+                <div class="p-4 bg-light rounded-3 mb-4">
+                    <form th:action="@{/admin/appointments}" method="get" class="row g-3 align-items-end">
+                        <div class="col-md-3">
+                            <label class="form-label small fw-semibold">Consultation Date</label>
+                            <input type="date" name="date" class="form-control form-control-sm" th:value="${selectedDate}">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-semibold">Specialist Doctor</label>
+                            <select name="doctorId" class="form-select form-select-sm">
+                                <option value="">All Doctors</option>
+                                <option th:each="doc : ${doctors}" th:value="${doc.id}" th:text="${doc.name}" th:selected="${doc.id == selectedDoctor}"></option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-semibold">Department</label>
+                            <select name="departmentId" class="form-select form-select-sm">
+                                <option value="">All Departments</option>
+                                <option th:each="dept : ${departments}" th:value="${dept.id}" th:text="${dept.departmentName}" th:selected="${dept.id == selectedDept}"></option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-semibold">Status</label>
+                            <select name="status" class="form-select form-select-sm">
+                                <option value="">All Statuses</option>
+                                <option value="PENDING" th:selected="${selectedStatus == 'PENDING'}">PENDING</option>
+                                <option value="CONFIRMED" th:selected="${selectedStatus == 'CONFIRMED'}">CONFIRMED</option>
+                                <option value="COMPLETED" th:selected="${selectedStatus == 'COMPLETED'}">COMPLETED</option>
+                                <option value="CANCELLED" th:selected="${selectedStatus == 'CANCELLED'}">CANCELLED</option>
+                            </select>
+                        </div>
+                        <div class="col-12 text-end">
+                            <a th:href="@{/admin/appointments}" class="btn btn-outline-secondary btn-sm px-3 rounded-3 me-2">Clear Filters</a>
+                            <button type="submit" class="btn btn-primary btn-sm px-4 rounded-3"><i class="fa-solid fa-search"></i> Filter</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Booking ID</th>
+                                <th>Patient Name</th>
+                                <th>Doctor / Dept</th>
+                                <th>Date / Time</th>
+                                <th>Token</th>
+                                <th>Status</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="app : ${appointments}">
+                                <td class="fw-bold font-monospace" th:text="'#' + ${app.id}">#1</td>
+                                <td th:text="${app.patient.fullName}">Patient Name</td>
+                                <td>
+                                    <div class="fw-semibold" th:text="${app.doctor.name}">Dr. Connor</div>
+                                    <small class="text-muted" th:text="${app.doctor.department.departmentName}"></small>
+                                </td>
+                                <td>
+                                    <div class="small" th:text="${app.appointmentDate}">Date</div>
+                                    <div class="small text-muted" th:text="${app.appointmentTime}">Time</div>
+                                </td>
+                                <td class="font-monospace fw-bold text-primary" th:text="${app.tokenNumber}">1</td>
+                                <td>
+                                    <span class="status-badge" 
+                                          th:classappend="${app.status == 'PENDING' ? 'badge-pending' : 
+                                                           app.status == 'CONFIRMED' ? 'badge-confirmed' : 
+                                                           app.status == 'COMPLETED' ? 'badge-completed' : 'badge-cancelled'}"
+                                          th:text="${app.status}">PENDING</span>
+                                </td>
+                                <td class="text-end">
+                                    <div class="d-inline-flex gap-1" th:if="${app.status == 'PENDING' || app.status == 'CONFIRMED'}">
+                                        <!-- Confirm -->
+                                        <form th:if="${app.status == 'PENDING'}" th:action="@{/admin/appointments/{id}/status(id=${app.id})}" method="post">
+                                            <input type="hidden" name="status" value="CONFIRMED">
+                                            <button type="submit" class="btn btn-outline-success btn-xs" title="Confirm"><i class="fa-solid fa-check"></i></button>
+                                        </form>
+                                        <!-- Complete -->
+                                        <form th:if="${app.status == 'CONFIRMED'}" th:action="@{/admin/appointments/{id}/status(id=${app.id})}" method="post">
+                                            <input type="hidden" name="status" value="COMPLETED">
+                                            <button type="submit" class="btn btn-outline-primary btn-xs" title="Complete"><i class="fa-solid fa-circle-check"></i></button>
+                                        </form>
+                                        <!-- Cancel -->
+                                        <form th:action="@{/admin/appointments/{id}/status(id=${app.id})}" method="post">
+                                            <input type="hidden" name="status" value="CANCELLED">
+                                            <button type="submit" class="btn btn-outline-danger btn-xs" title="Reject"><i class="fa-solid fa-times"></i></button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div th:if="${appointments.isEmpty()}" class="text-center py-5 text-muted">
+                    <i class="fa-solid fa-calendar-times fa-3x mb-3 text-muted"></i>
+                    <h5>No Appointments Match Filters</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{fragments/layout :: footer}"></div>
+
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('success')) {
+        Swal.fire('Updated', 'Booking status successfully adjusted.', 'success');
+    }
+</script>
+</body>
+</html>

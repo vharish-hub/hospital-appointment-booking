@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Doctor Directory')}"></head>
+<body>
+
+<div th:replace="~{fragments/layout :: navbar}"></div>
+
+<div class="container py-5">
+    <!-- Header Title -->
+    <div class="text-center mb-5">
+        <h2 class="fw-bold">Our Medical Specialists</h2>
+        <p class="text-muted">Find and schedule a session with our highly qualified doctors.</p>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="glass-card p-4 mb-5 shadow-sm">
+        <form th:action="@{/doctors}" method="get" class="row g-3 align-items-end">
+            <div class="col-md-5">
+                <label class="form-label fw-semibold">Search Doctor</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-transparent"><i class="fa-solid fa-search text-muted"></i></span>
+                    <input type="text" name="search" class="form-control" placeholder="Search by name, specialization..." th:value="${searchQuery}">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">Filter by Department</label>
+                <select name="department" class="form-select">
+                    <option value="">All Departments</option>
+                    <option th:each="dept : ${departments}" 
+                            th:value="${dept.id}" 
+                            th:text="${dept.departmentName}"
+                            th:selected="${dept.id == selectedDept}"></option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
+                    <i class="fa-solid fa-filter me-1"></i>Apply Filters
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Doctors Grid -->
+    <div class="row g-4">
+        <div th:each="doc : ${doctors}" class="col-lg-4 col-md-6">
+            <div class="glass-card h-100 overflow-hidden d-flex flex-column justify-content-between">
+                <div>
+                    <!-- Doctor profile image based on ID or fallback -->
+                    <img th:src="${doc.id == 1 ? 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=400' : 
+                                 doc.id == 2 ? 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=400' : 
+                                 doc.id == 3 ? 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=400' :
+                                 doc.id == 4 ? 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&q=80&w=400' :
+                                 'https://images.unsplash.com/photo-1594824813573-246434de83fb?auto=format&fit=crop&q=80&w=400'}" 
+                         class="card-img-top doctor-card-img" alt="Doctor profile">
+                    
+                    <div class="p-4">
+                        <span class="badge bg-primary-subtle text-primary mb-2" th:text="${doc.department.departmentName}">Department</span>
+                        <h5 class="fw-bold mb-1" th:text="${doc.name}">Doctor Name</h5>
+                        <p class="text-secondary small mb-2" th:text="${doc.qualification} + ' - ' + ${doc.specialization}">Qualification & Specialty</p>
+                        
+                        <hr class="my-3 opacity-25">
+                        
+                        <div class="d-flex flex-column gap-2">
+                            <span class="small text-muted"><i class="fa-solid fa-briefcase text-primary me-2" style="width: 14px;"></i><span th:text="${doc.experience}"></span> Years Experience</span>
+                            <span class="small text-muted"><i class="fa-solid fa-clock text-primary me-2" style="width: 14px;"></i><span th:text="${doc.availability}"></span></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-4 pt-0">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="fw-bold text-primary" th:text="'$' + ${doc.consultationFee} + ' Fee'">$150.00 Fee</span>
+                        <span class="text-warning"><i class="fa-solid fa-star me-1"></i>5.0</span>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <a th:href="@{/doctors/{id}(id=${doc.id})}" class="btn btn-outline-secondary btn-sm w-100 py-2 rounded-3">Profile</a>
+                        </div>
+                        <div class="col-6">
+                            <a th:href="@{/book-appointment}" class="btn btn-primary btn-sm w-100 py-2 rounded-3">Book Slot</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Empty Results -->
+        <div th:if="${doctors.isEmpty()}" class="col-12 text-center py-5">
+            <i class="fa-solid fa-user-md-slash text-muted fa-3x mb-3"></i>
+            <h4 class="fw-bold">No Doctors Found</h4>
+            <p class="text-muted">Try adjusting your search terms or filters.</p>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{fragments/layout :: footer}"></div>
+
+</body>
+</html>

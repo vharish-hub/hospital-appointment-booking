@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('About Us')}"></head>
+<body>
+
+<div th:replace="~{fragments/layout :: navbar}"></div>
+
+<div class="container py-5">
+    <div class="text-center mb-5 col-lg-8 mx-auto">
+        <h2 class="fw-bold">About MediCare Hospital</h2>
+        <p class="text-muted leading-relaxed">Founded in 2026, MediCare is at the forefront of digital healthcare. Our mission is to democratize specialist access, optimize clinical queues, and provide high-resolution visual tools that make patient-specialist interaction seamless.</p>
+    </div>
+    <div class="row g-4 align-items-center">
+        <div class="col-md-6">
+            <img src="https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80&w=600" class="img-fluid rounded-4 shadow" alt="Hospital">
+        </div>
+        <div class="col-md-6">
+            <h4 class="fw-bold text-primary mb-3">Our Core Values</h4>
+            <div class="d-flex gap-3 mb-3">
+                <i class="fa-solid fa-circle-check text-success fs-3 mt-1"></i>
+                <div>
+                    <h6 class="fw-bold mb-1">Patient-First Care</h6>
+                    <p class="text-muted small">We build tools and protocols around patient comfort and convenience.</p>
+                </div>
+            </div>
+            <div class="d-flex gap-3 mb-3">
+                <i class="fa-solid fa-circle-check text-success fs-3 mt-1"></i>
+                <div>
+                    <h6 class="fw-bold mb-1">State-of-the-art Operations</h6>
+                    <p class="text-muted small">Integrating WebSockets and PDFs to run latency-free, digital clinical logs.</p>
+                </div>
+            </div>
+            <div class="d-flex gap-3">
+                <i class="fa-solid fa-circle-check text-success fs-3 mt-1"></i>
+                <div>
+                    <h6 class="fw-bold mb-1">Specialized Excellence</h6>
+                    <p class="text-muted small">Only boarding board-certified, top-tier medical specialist doctors.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{fragments/layout :: footer}"></div>
+
+</body>
+</html>

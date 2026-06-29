@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Admin Dashboard')}"></head>
+<body class="bg-light">
+
+<div th:replace="~{fragments/layout :: navbar}"></div>
+
+<div class="container py-5">
+    <div class="row g-4">
+        <!-- --- ADMIN NAVIGATION PANEL --- -->
+        <div class="col-lg-3">
+            <div class="glass-card p-4 shadow-sm mb-4 border-0">
+                <h5 class="fw-bold mb-4 text-primary"><i class="fa-solid fa-user-shield me-2"></i>Administration</h5>
+                <div class="list-group list-group-flush gap-2">
+                    <a th:href="@{/admin/dashboard}" class="list-group-item list-group-item-action border-0 rounded-3 py-3 active">
+                        <i class="fa-solid fa-chart-line me-2"></i>Overview Analytics
+                    </a>
+                    <a th:href="@{/admin/doctors}" class="list-group-item list-group-item-action border-0 rounded-3 py-3">
+                        <i class="fa-solid fa-user-md me-2"></i>Manage Doctors
+                    </a>
+                    <a th:href="@{/admin/patients}" class="list-group-item list-group-item-action border-0 rounded-3 py-3">
+                        <i class="fa-solid fa-users me-2"></i>Manage Patients
+                    </a>
+                    <a th:href="@{/admin/appointments}" class="list-group-item list-group-item-action border-0 rounded-3 py-3">
+                        <i class="fa-solid fa-calendar-check me-2"></i>Manage Bookings
+                    </a>
+                    <a th:href="@{/admin/reports}" class="list-group-item list-group-item-action border-0 rounded-3 py-3">
+                        <i class="fa-solid fa-file-invoice-dollar me-2"></i>Audit Reports
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- --- MAIN CONTENT AREA: ANALYTICS --- -->
+        <div class="col-lg-9">
+            <!-- Metric Cards Row -->
+            <div class="row g-3 mb-5">
+                <div class="col-md-4 col-6">
+                    <div class="glass-card p-4 text-center border-0 shadow-sm">
+                        <div class="text-primary fs-2 mb-2"><i class="fa-solid fa-user-md"></i></div>
+                        <h3 class="fw-bold mb-0" th:text="${stats.totalDoctors}">0</h3>
+                        <span class="text-muted small">Total Doctors</span>
+                    </div>
+                </div>
+                <div class="col-md-4 col-6">
+                    <div class="glass-card p-4 text-center border-0 shadow-sm">
+                        <div class="text-primary fs-2 mb-2"><i class="fa-solid fa-users"></i></div>
+                        <h3 class="fw-bold mb-0" th:text="${stats.totalPatients}">0</h3>
+                        <span class="text-muted small">Total Patients</span>
+                    </div>
+                </div>
+                <div class="col-md-4 col-6">
+                    <div class="glass-card p-4 text-center border-0 shadow-sm">
+                        <div class="text-primary fs-2 mb-2"><i class="fa-solid fa-calendar-alt"></i></div>
+                        <h3 class="fw-bold mb-0" th:text="${stats.totalAppointments}">0</h3>
+                        <span class="text-muted small">Total Bookings</span>
+                    </div>
+                </div>
+                <div class="col-md-6 col-6">
+                    <div class="glass-card p-4 text-center border-0 shadow-sm">
+                        <div class="text-primary fs-2 mb-2"><i class="fa-solid fa-stethoscope"></i></div>
+                        <h3 class="fw-bold mb-0" th:text="${stats.todaysAppointments}">0</h3>
+                        <span class="text-muted small">Today's Appointments</span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="glass-card p-4 text-center border-0 shadow-sm">
+                        <div class="text-success fs-2 mb-2"><i class="fa-solid fa-wallet"></i></div>
+                        <h3 class="fw-bold mb-0" th:text="'$' + ${#numbers.formatDecimal(stats.totalRevenue, 1, 2)}">$0.00</h3>
+                        <span class="text-muted small">Total Earnings</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="row g-4">
+                <!-- Appointment Trends Chart -->
+                <div class="col-md-6">
+                    <div class="glass-card p-4 border-0 shadow-sm">
+                        <h6 class="fw-bold mb-3"><i class="fa-solid fa-chart-line text-primary me-2"></i>Booking Trends (Last 6 Months)</h6>
+                        <canvas id="bookingsChart" style="max-height: 250px;"></canvas>
+                    </div>
+                </div>
+                <!-- Revenue Chart -->
+                <div class="col-md-6">
+                    <div class="glass-card p-4 border-0 shadow-sm">
+                        <h6 class="fw-bold mb-3"><i class="fa-solid fa-wallet text-success me-2"></i>Earnings Analysis (Last 6 Months)</h6>
+                        <canvas id="revenueChart" style="max-height: 250px;"></canvas>
+                    </div>
+                </div>
+                <!-- Department Analysis -->
+                <div class="col-12">
+                    <div class="glass-card p-4 border-0 shadow-sm">
+                        <h6 class="fw-bold mb-3"><i class="fa-solid fa-chart-pie text-info me-2"></i>Department-wise Allocation</h6>
+                        <div class="row justify-content-center">
+                            <div class="col-lg-6">
+                                <canvas id="deptChart" style="max-height: 280px;"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{fragments/layout :: footer}"></div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script th:inline="javascript">
+    // Extract server values inlined to JavaScript
+    const monthlyLabels = /*[[${stats.monthlyLabels}]]*/ [];
+    const monthlyBookings = /*[[${stats.monthlyBookings}]]*/ [];
+    const monthlyRevenue = /*[[${stats.monthlyRevenue}]]*/ [];
+    const departmentLabels = /*[[${stats.departmentLabels}]]*/ [];
+    const departmentBookings = /*[[${stats.departmentBookings}]]*/ [];
+
+    document.addEventListener("DOMContentLoaded", () => {
+        // Bookings Line Chart
+        new Chart(document.getElementById("bookingsChart"), {
+            type: 'line',
+            data: {
+                labels: monthlyLabels,
+                datasets: [{
+                    label: 'Bookings',
+                    data: monthlyBookings,
+                    borderColor: '#0284c7',
+                    backgroundColor: 'rgba(2, 132, 199, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+
+        // Revenue Bar Chart
+        new Chart(document.getElementById("revenueChart"), {
+            type: 'bar',
+            data: {
+                labels: monthlyLabels,
+                datasets: [{
+                    label: 'Revenue ($)',
+                    data: monthlyRevenue,
+                    backgroundColor: '#10b981',
+                    borderRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+
+        // Department Doughnut Chart
+        new Chart(document.getElementById("deptChart"), {
+            type: 'doughnut',
+            data: {
+                labels: departmentLabels,
+                datasets: [{
+                    data: departmentBookings,
+                    backgroundColor: ['#0284c7', '#0d9488', '#f59e0b', '#ef4444', '#06b6d4', '#8b5cf6', '#ec4899', '#10b981']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+    });
+</script>
+</body>
+</html>

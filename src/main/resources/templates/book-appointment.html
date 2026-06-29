@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Book Appointment')}"></head>
+<body class="bg-light">
+
+<div th:replace="~{fragments/layout :: navbar}"></div>
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Title -->
+            <div class="text-center mb-5">
+                <h2 class="fw-bold">Schedule an Appointment</h2>
+                <p class="text-muted">Follow the steps below to secure your consultation slot.</p>
+            </div>
+
+            <!-- Step Indicators -->
+            <div class="step-indicator px-4">
+                <div class="step-dot active" id="dot-1">1</div>
+                <div class="step-dot" id="dot-2">2</div>
+                <div class="step-dot" id="dot-3">3</div>
+                <div class="step-dot" id="dot-4">4</div>
+                <div class="step-dot" id="dot-5">5</div>
+            </div>
+
+            <!-- Booking Card Wizard -->
+            <div class="glass-card p-5 shadow-lg border-0">
+                <form id="bookingWizardForm">
+
+                    <!-- STEP 1: SELECT DEPARTMENT -->
+                    <div class="wizard-step" id="step-1">
+                        <h4 class="fw-bold mb-4"><i class="fa-solid fa-layer-group text-primary me-2"></i>Step 1: Select Department</h4>
+                        <p class="text-muted">Choose the department or clinical specialty you require:</p>
+                        <div class="row g-3">
+                            <div th:each="dept : ${departments}" class="col-md-6">
+                                <input type="radio" class="btn-check" name="departmentId" th:id="'dept-' + ${dept.id}" th:value="${dept.id}" required>
+                                <label class="btn btn-outline-primary w-100 p-4 text-start rounded-3 h-100" th:for="'dept-' + ${dept.id}">
+                                    <h6 class="fw-bold mb-1" th:text="${dept.departmentName}">Cardiology</h6>
+                                    <small class="text-muted" th:text="${dept.description}">Description</small>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- STEP 2: SELECT DOCTOR -->
+                    <div class="wizard-step d-none" id="step-2">
+                        <h4 class="fw-bold mb-4"><i class="fa-solid fa-user-md text-primary me-2"></i>Step 2: Choose Specialist</h4>
+                        <p class="text-muted">Select one of our doctors specialized in your selected department:</p>
+                        <div id="doctorListContainer" class="row g-3">
+                            <!-- Populated dynamically via JS -->
+                            <div th:each="doc : ${doctors}" class="col-md-6 doc-option-wrapper" th:data-dept-id="${doc.department.id}">
+                                <input type="radio" class="btn-check" name="doctorId" th:id="'doc-' + ${doc.id}" th:value="${doc.id}">
+                                <label class="btn btn-outline-primary w-100 p-3 text-start rounded-3 h-100 d-flex align-items-center gap-3" th:for="'doc-' + ${doc.id}">
+                                    <img src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=100" class="rounded-circle" style="width: 50px; height: 50px; object-fit: cover;">
+                                    <div>
+                                        <h6 class="fw-bold mb-0" th:text="${doc.name}">Dr. Name</h6>
+                                        <small class="text-muted" th:text="${doc.qualification}">MD</small>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- STEP 3: SELECT DATE -->
+                    <div class="wizard-step d-none" id="step-3">
+                        <h4 class="fw-bold mb-4"><i class="fa-solid fa-calendar text-primary me-2"></i>Step 3: Choose Date</h4>
+                        <p class="text-muted">Pick a date for your consultation. Clinic dates exclude weekends and blocked holidays:</p>
+                        <div class="col-md-6 mx-auto">
+                            <input type="date" id="appointmentDate" class="form-control form-control-lg text-center" required>
+                        </div>
+                    </div>
+
+                    <!-- STEP 4: CHOOSE TIME SLOT -->
+                    <div class="wizard-step d-none" id="step-4">
+                        <h4 class="fw-bold mb-4"><i class="fa-solid fa-clock text-primary me-2"></i>Step 4: Select Time Slot</h4>
+                        <p class="text-muted">Select an available 30-minute consultation window:</p>
+                        <div id="timeSlotsContainer" class="row g-2 justify-content-center">
+                            <!-- Populated dynamically via AJAX -->
+                        </div>
+                        <div id="noSlotsMessage" class="text-center text-danger d-none my-4">
+                            <i class="fa-solid fa-calendar-times fa-2x mb-2"></i>
+                            <p>No slots are available on this date. Please go back and choose another date.</p>
+                        </div>
+                    </div>
+
+                    <!-- STEP 5: CONFIRMATION & CONTACT DETAILS -->
+                    <div class="wizard-step d-none" id="step-5">
+                        <h4 class="fw-bold mb-4"><i class="fa-solid fa-circle-check text-success me-2"></i>Step 5: Contact Details & Confirmation</h4>
+                        
+                        <div class="p-4 bg-light rounded-3 mb-4">
+                            <h6 class="fw-bold mb-3"><i class="fa-solid fa-receipt text-primary me-2"></i>Appointment Summary</h6>
+                            <div class="row g-3">
+                                <div class="col-6 col-md-3">
+                                    <span class="text-muted small d-block">Department</span>
+                                    <span class="fw-bold" id="summaryDept">Cardiology</span>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <span class="text-muted small d-block">Specialist</span>
+                                    <span class="fw-bold" id="summaryDoc">Dr. Sarah Connor</span>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <span class="text-muted small d-block">Appointment Date</span>
+                                    <span class="fw-bold" id="summaryDate">2026-06-25</span>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <span class="text-muted small d-block">Selected Time</span>
+                                    <span class="fw-bold" id="summaryTime">10:00 AM</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="glass-card p-4 border-0 bg-light bg-opacity-50">
+                            <h6 class="fw-bold mb-3"><i class="fa-solid fa-user text-primary me-2"></i>Patient Personal Details</h6>
+                            <div class="row g-3">
+                                <div class="col-md-12">
+                                    <label class="form-label small fw-semibold">Patient Full Name</label>
+                                    <input type="text" id="patientFullName" class="form-control" placeholder="John Doe" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-semibold">Email Address (for confirmation receipt)</label>
+                                    <input type="email" id="patientEmail" class="form-control" placeholder="john.doe@gmail.com" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-semibold">Phone Number</label>
+                                    <input type="tel" id="patientPhone" class="form-control" placeholder="+1 (555) 123-4567" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Button Controls -->
+                    <div class="d-flex justify-content-between mt-5 pt-3 border-top border-light">
+                        <button type="button" id="prevBtn" class="btn btn-outline-secondary px-4 py-2 rounded-3 fw-bold d-none">
+                            <i class="fa-solid fa-arrow-left me-1"></i> Back
+                        </button>
+                        <button type="button" id="nextBtn" class="btn btn-primary px-4 py-2 rounded-3 fw-bold ms-auto">
+                            Next <i class="fa-solid fa-arrow-right ms-1"></i>
+                        </button>
+                        <button type="submit" id="submitBtn" class="btn btn-success px-4 py-2 rounded-3 fw-bold d-none">
+                            <span id="spinner" class="spinner-border spinner-border-sm me-2 d-none" role="status"></span>
+                            Confirm Appointment <i class="fa-solid fa-check ms-1"></i>
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{fragments/layout :: footer}"></div>
+
+<script>
+    let currentStep = 1;
+    const totalSteps = 5;
+
+    // Set minimum date to today
+    const dateInput = document.getElementById("appointmentDate");
+    const today = new Date().toISOString().split('T')[0];
+    dateInput.min = today;
+
+    // Next Button Trigger
+    document.getElementById("nextBtn").addEventListener("click", () => {
+        if (validateStep(currentStep)) {
+            currentStep++;
+            showStep(currentStep);
+        }
+    });
+
+    // Back Button Trigger
+    document.getElementById("prevBtn").addEventListener("click", () => {
+        currentStep--;
+        showStep(currentStep);
+    });
+
+    function showStep(step) {
+        document.querySelectorAll(".wizard-step").forEach(s => s.classList.add("d-none"));
+        document.getElementById(`step-${step}`).classList.remove("d-none");
+
+        // Indicators
+        document.querySelectorAll(".step-dot").forEach((dot, index) => {
+            dot.classList.remove("active", "completed");
+            if (index + 1 < step) {
+                dot.classList.add("completed");
+            } else if (index + 1 === step) {
+                dot.classList.add("active");
+            }
+        });
+
+        // Prev Button
+        if (step === 1) {
+            document.getElementById("prevBtn").classList.add("d-none");
+        } else {
+            document.getElementById("prevBtn").classList.remove("d-none");
+        }
+
+        // Next / Submit Buttons
+        if (step === totalSteps) {
+            document.getElementById("nextBtn").classList.add("d-none");
+            document.getElementById("submitBtn").classList.remove("d-none");
+            compileSummary();
+        } else {
+            document.getElementById("nextBtn").classList.remove("d-none");
+            document.getElementById("submitBtn").classList.add("d-none");
+        }
+
+        // Action when moving to Step 2 (Filter Doctors)
+        if (step === 2) {
+            const selectedDept = document.querySelector('input[name="departmentId"]:checked').value;
+            document.querySelectorAll(".doc-option-wrapper").forEach(wrapper => {
+                if (wrapper.getAttribute("data-dept-id") === selectedDept) {
+                    wrapper.classList.remove("d-none");
+                } else {
+                    wrapper.classList.add("d-none");
+                    // Uncheck any hidden doctors
+                    wrapper.querySelector('input[name="doctorId"]').checked = false;
+                }
+            });
+        }
+
+        // Action when moving to Step 4 (Fetch Slots)
+        if (step === 4) {
+            fetchSlots();
+        }
+    }
+
+    function validateStep(step) {
+        if (step === 1) {
+            const selected = document.querySelector('input[name="departmentId"]:checked');
+            if (!selected) {
+                Swal.fire('Error', 'Please select a department specialty', 'error');
+                return false;
+            }
+        } else if (step === 2) {
+            const selected = document.querySelector('input[name="doctorId"]:checked');
+            if (!selected) {
+                Swal.fire('Error', 'Please select a specialist doctor', 'error');
+                return false;
+            }
+        } else if (step === 3) {
+            const date = document.getElementById("appointmentDate").value;
+            if (!date) {
+                Swal.fire('Error', 'Please choose a valid consultation date', 'error');
+                return false;
+            }
+        } else if (step === 4) {
+            const selected = document.querySelector('input[name="appointmentTime"]:checked');
+            if (!selected) {
+                Swal.fire('Error', 'Please select a consultation time slot', 'error');
+                return false;
+            }
+        }
+        return true;
+    }
+
+    function fetchSlots() {
+        const doctorId = document.querySelector('input[name="doctorId"]:checked').value;
+        const date = document.getElementById("appointmentDate").value;
+        const container = document.getElementById("timeSlotsContainer");
+        const noSlots = document.getElementById("noSlotsMessage");
+
+        container.innerHTML = `<div class="text-center my-4"><div class="spinner-border text-primary" role="status"></div></div>`;
+        noSlots.classList.add("d-none");
+
+        fetch(`/api/appointments/slots?doctorId=${doctorId}&date=${date}`)
+        .then(res => res.json())
+        .then(slots => {
+            container.innerHTML = "";
+            if (slots.length === 0) {
+                noSlots.classList.remove("d-none");
+            } else {
+                slots.forEach((slot, index) => {
+                    const col = document.createElement("div");
+                    col.className = "col-md-3 col-6";
+                    col.innerHTML = `
+                        <input type="radio" class="btn-check" name="appointmentTime" id="slot-${index}" value="${slot}" required>
+                        <label class="btn btn-outline-primary w-100 py-3 rounded-3 font-monospace fw-semibold" for="slot-${index}">${slot}</label>
+                    `;
+                    container.appendChild(col);
+                });
+            }
+        });
+    }
+
+    function compileSummary() {
+        const deptLabel = document.querySelector('input[name="departmentId"]:checked').nextElementSibling.querySelector("h6").innerText;
+        const docLabel = document.querySelector('input[name="doctorId"]:checked').nextElementSibling.querySelector("h6").innerText;
+        const date = document.getElementById("appointmentDate").value;
+        const time = document.querySelector('input[name="appointmentTime"]:checked').value;
+
+        document.getElementById("summaryDept").innerText = deptLabel;
+        document.getElementById("summaryDoc").innerText = docLabel;
+        document.getElementById("summaryDate").innerText = date;
+        document.getElementById("summaryTime").innerText = time;
+    }
+
+    // Submit Booking Form Trigger
+    // Submit Booking Form Trigger
+    document.getElementById("bookingWizardForm").addEventListener("submit", (e) => {
+        e.preventDefault();
+        
+        const doctorId = document.querySelector('input[name="doctorId"]:checked').value;
+        const appointmentDate = document.getElementById("appointmentDate").value;
+        const appointmentTime = document.querySelector('input[name="appointmentTime"]:checked').value;
+        const fullName = document.getElementById("patientFullName").value;
+        const email = document.getElementById("patientEmail").value;
+        const phone = document.getElementById("patientPhone").value;
+
+        const submitBtn = document.getElementById("submitBtn");
+        const spinner = document.getElementById("spinner");
+
+        submitBtn.disabled = true;
+        spinner.classList.remove("d-none");
+
+        fetch('/api/appointments/book', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ doctorId, appointmentDate, appointmentTime, fullName, email, phone })
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => { throw new Error(err.error || 'Booking failed') });
+            }
+            return response.json();
+        })
+        .then(data => {
+            Swal.fire({
+                icon: 'success',
+                title: 'Appointment Scheduled!',
+                html: `Your appointment is confirmed. <br> <strong>Token Number: ${data.tokenNumber}</strong> <br> Slip ID: #${data.id} <br><br> An email confirmation has been sent to <strong>${data.patient.email}</strong>.`,
+                confirmButtonColor: '#0ea5e9',
+                confirmButtonText: 'Return Home'
+            }).then(() => {
+                window.location.href = '/';
+            });
+        })
+        .catch(error => {
+            submitBtn.disabled = false;
+            spinner.classList.add("d-none");
+            Swal.fire({
+                icon: 'error',
+                title: 'Booking Failed',
+                text: error.message
+            });
+        });
+    });
+</script>
+</body>
+</html>
