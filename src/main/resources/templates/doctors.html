@@ -45,12 +45,8 @@
         <div th:each="doc : ${doctors}" class="col-lg-4 col-md-6">
             <div class="glass-card h-100 overflow-hidden d-flex flex-column justify-content-between">
                 <div>
-                    <!-- Doctor profile image based on ID or fallback -->
-                    <img th:src="${doc.id == 1 ? 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=400' : 
-                                 doc.id == 2 ? 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=400' : 
-                                 doc.id == 3 ? 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=400' :
-                                 doc.id == 4 ? 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&q=80&w=400' :
-                                 'https://images.unsplash.com/photo-1594824813573-246434de83fb?auto=format&fit=crop&q=80&w=400'}" 
+                    <!-- Doctor profile image based on database field -->
+                    <img th:src="${doc.profileImage}" 
                          class="card-img-top doctor-card-img" alt="Doctor profile">
                     
                     <div class="p-4">
@@ -68,7 +64,7 @@
                 </div>
                 <div class="p-4 pt-0">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <span class="fw-bold text-primary" th:text="'$' + ${doc.consultationFee} + ' Fee'">$150.00 Fee</span>
+                        <span class="fw-bold text-primary" th:text="'₹' + ${doc.consultationFee} + ' Fee'">500/- Rupees Fee</span>
                         <span class="text-warning"><i class="fa-solid fa-star me-1"></i>5.0</span>
                     </div>
                     <div class="row g-2">

@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayInputStream;
 import java.time.LocalDate;
@@ -33,6 +34,31 @@ import java.util.List;
 @Controller
 @RequestMapping("/admin")
 public class AdminController {
+
+    private String saveUploadedFile(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            return null;
+        }
+        try {
+            String filename = "doc-" + System.currentTimeMillis() + "_" + file.getOriginalFilename().replaceAll("[^a-zA-Z0-9\\.\\-_]", "_");
+            String[] dirs = {
+                "src/main/resources/static/images/",
+                "target/classes/static/images/"
+            };
+            for (String dirPath : dirs) {
+                java.io.File dir = new java.io.File(dirPath);
+                if (!dir.exists()) {
+                    dir.mkdirs();
+                }
+                java.nio.file.Path path = java.nio.file.Paths.get(dirPath + filename);
+                java.nio.file.Files.write(path, file.getBytes());
+            }
+            return "/images/" + filename;
+        } catch (Exception e) {
+            System.err.println("Failed to save uploaded file: " + e.getMessage());
+            return null;
+        }
+    }
 
     @Autowired
     private AppointmentService appointmentService;
@@ -81,7 +107,7 @@ public class AdminController {
             @RequestParam Integer experience,
             @RequestParam Double consultationFee,
             @RequestParam String availability,
-            @RequestParam(required = false) String profileImage) {
+            @RequestParam(value = "imageFile", required = false) MultipartFile imageFile) {
         
         try {
             // 1. Create Login User profile for the Doctor
@@ -110,7 +136,9 @@ public class AdminController {
             doctor.setExperience(experience);
             doctor.setConsultationFee(consultationFee);
             doctor.setAvailability(availability);
-            doctor.setProfileImage(profileImage == null || profileImage.trim().isEmpty() ? "default-doctor.jpg" : profileImage);
+            
+            String imagePath = saveUploadedFile(imageFile);
+            doctor.setProfileImage(imagePath != null ? imagePath : "/images/default-doctor.jpg");
             
             doctorService.saveDoctor(doctor);
             return "redirect:/admin/doctors?success=added";
@@ -129,7 +157,7 @@ public class AdminController {
             @RequestParam Integer experience,
             @RequestParam Double consultationFee,
             @RequestParam String availability,
-            @RequestParam(required = false) String profileImage) {
+            @RequestParam(value = "imageFile", required = false) MultipartFile imageFile) {
         
         try {
             Doctor doctor = doctorService.getDoctorById(id)
@@ -145,8 +173,10 @@ public class AdminController {
             doctor.setExperience(experience);
             doctor.setConsultationFee(consultationFee);
             doctor.setAvailability(availability);
-            if (profileImage != null && !profileImage.trim().isEmpty()) {
-                doctor.setProfileImage(profileImage);
+            
+            String imagePath = saveUploadedFile(imageFile);
+            if (imagePath != null) {
+                doctor.setProfileImage(imagePath);
             }
             
             doctorService.saveDoctor(doctor);

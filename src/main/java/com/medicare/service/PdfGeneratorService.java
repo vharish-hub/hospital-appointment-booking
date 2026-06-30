@@ -76,7 +76,7 @@ public class PdfGeneratorService {
             addTableCell(table, appointment.getAppointmentDate().toString() + " @ " + appointment.getAppointmentTime(), bodyFont);
 
             addTableCell(table, "Consultation Fee:", headerFont);
-            addTableCell(table, "$" + String.format("%.2f", appointment.getDoctor().getConsultationFee()), bodyFont);
+            addTableCell(table, "Rs. " + String.format("%.2f", appointment.getDoctor().getConsultationFee()), bodyFont);
 
             addTableCell(table, "Status:", headerFont);
             addTableCell(table, appointment.getStatus(), bodyFont);
@@ -148,7 +148,7 @@ public class PdfGeneratorService {
             document.add(table);
 
             document.add(new Paragraph(" "));
-            Paragraph summary = new Paragraph(String.format("Total Appointments: %d  |  Revenue from Completed Bookings: $%.2f",
+            Paragraph summary = new Paragraph(String.format("Total Appointments: %d  |  Revenue from Completed Bookings: Rs. %.2f",
                     appointments.size(), totalRevenue), FontFactory.getFont(FontFactory.HELVETICA_BOLD, 11));
             summary.setAlignment(Element.ALIGN_RIGHT);
             document.add(summary);
@@ -167,7 +167,7 @@ public class PdfGeneratorService {
 
             // Create Header Row
             Row headerRow = sheet.createRow(0);
-            String[] columns = {"ID", "Patient Name", "Doctor Name", "Department", "Date", "Time", "Status", "Fee ($)"};
+            String[] columns = {"ID", "Patient Name", "Doctor Name", "Department", "Date", "Time", "Status", "Fee (Rs.)"};
             for (int i = 0; i < columns.length; i++) {
                 org.apache.poi.ss.usermodel.Cell cell = headerRow.createCell(i);
                 cell.setCellValue(columns[i]);

@@ -74,16 +74,14 @@ public class MedicareApplication {
 
             // 3. Ensure doctor logins exist and have correct password hashes
             String[] doctorEmails = {
-                "sarah.connor@medicare.com",
-                "charles.xavier@medicare.com",
-                "stephen.strange@medicare.com",
-                "gregory.house@medicare.com"
+                "mithilesh@medicare.com",
+                "hemanth@medicare.com",
+                "rahul@medicare.com"
             };
             String[] doctorNames = {
-                "Dr. Sarah Connor",
-                "Dr. Charles Xavier",
-                "Dr. Stephen Strange",
-                "Dr. Gregory House"
+                "Dr. Mithilesh",
+                "Dr. Hemanth",
+                "Dr. Rahul"
             };
 
             for (int i = 0; i < doctorEmails.length; i++) {

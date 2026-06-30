@@ -3,8 +3,10 @@ package com.medicare.service;
 import com.medicare.model.Doctor;
 import com.medicare.repository.DoctorRepository;
 import com.medicare.repository.ReviewRepository;
+import com.medicare.repository.AppointmentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -17,6 +19,9 @@ public class DoctorServiceImpl implements DoctorService {
 
     @Autowired
     private ReviewRepository reviewRepository;
+
+    @Autowired
+    private AppointmentRepository appointmentRepository;
 
     @Override
     public List<Doctor> getAllDoctors() {
@@ -53,7 +58,10 @@ public class DoctorServiceImpl implements DoctorService {
     }
 
     @Override
+    @Transactional
     public void deleteDoctor(Long id) {
+        reviewRepository.deleteByDoctorId(id);
+        appointmentRepository.deleteByDoctorId(id);
         doctorRepository.deleteById(id);
     }
 

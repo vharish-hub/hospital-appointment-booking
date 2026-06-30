@@ -122,9 +122,7 @@
             <div th:each="doc : ${featuredDoctors}" class="col-lg-4">
                 <div class="glass-card h-100 overflow-hidden d-flex flex-column justify-content-between">
                     <div>
-                        <img th:src="${doc.id == 1 ? 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=400' : 
-                                     doc.id == 2 ? 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=400' : 
-                                     'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=400'}" 
+                        <img th:src="${doc.profileImage}" 
                              class="card-img-top doctor-card-img" alt="Doctor profile">
                         <div class="p-4">
                             <span class="badge bg-primary-subtle text-primary mb-2" th:text="${doc.department.departmentName}">Cardiology</span>
@@ -136,7 +134,7 @@
                     </div>
                     <div class="p-4 pt-0">
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            <span class="fw-bold text-primary" th:text="'$' + ${doc.consultationFee} + ' Fee'">$150 Fee</span>
+                            <span class="fw-bold text-primary" th:text="'₹' + ${doc.consultationFee} + ' Fee'">₹500 Fee</span>
                             <span class="text-warning"><i class="fa-solid fa-star me-1"></i>5.0</span>
                         </div>
                         <div class="row g-2">
@@ -213,6 +211,13 @@
                     <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 rounded p-3">
                         <h5>ICU & Surgery Wards</h5>
                         <p>Fully equipped medical theatres running state-of-the-art machinery and diagnostic tools.</p>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <img src="/images/doctorsgroup.jpeg" class="d-block w-100" alt="Doctor Group" style="object-fit: cover; max-height: 400px;">
+                    <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 rounded p-3">
+                        <h5>Our Expert Doctor Team</h5>
+                        <p>Meet our highly qualified team of medical professionals dedicated to your care.</p>
                     </div>
                 </div>
             </div>
