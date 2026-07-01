@@ -22,13 +22,92 @@ public class MedicareApplication {
     }
 
     @Bean
-    public CommandLineRunner bootstrapData(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public CommandLineRunner bootstrapData(
+            UserRepository userRepository,
+            com.medicare.repository.DepartmentRepository departmentRepository,
+            com.medicare.repository.DoctorRepository doctorRepository,
+            PasswordEncoder passwordEncoder) {
         return args -> {
             System.out.println("=================================================");
             System.out.println("[BOOTSTRAP] RUNNING DATABASE WORKER...");
             System.out.println("=================================================");
 
-            // 1. Ensure Admin exists and has correct password hash
+            // 1. Seed Departments if empty
+            if (departmentRepository.count() == 0) {
+                com.medicare.model.Department cardiology = new com.medicare.model.Department();
+                cardiology.setDepartmentName("Cardiology");
+                cardiology.setDescription("Heart and cardiovascular care services.");
+                departmentRepository.save(cardiology);
+
+                com.medicare.model.Department neurology = new com.medicare.model.Department();
+                neurology.setDepartmentName("Neurology");
+                neurology.setDescription("Brain, spinal cord, and nerve disorders.");
+                departmentRepository.save(neurology);
+
+                com.medicare.model.Department orthopedics = new com.medicare.model.Department();
+                orthopedics.setDepartmentName("Orthopedics");
+                orthopedics.setDescription("Bone, joint, and musculoskeletal care.");
+                departmentRepository.save(orthopedics);
+
+                System.out.println("[BOOTSTRAP] Seeded default departments: Cardiology, Neurology, Orthopedics");
+            }
+
+            // 2. Ensure default departments are fetched for seeding doctors
+            com.medicare.model.Department cardiology = departmentRepository.findAll().stream()
+                    .filter(d -> d.getDepartmentName().equalsIgnoreCase("Cardiology"))
+                    .findFirst().orElse(null);
+            com.medicare.model.Department neurology = departmentRepository.findAll().stream()
+                    .filter(d -> d.getDepartmentName().equalsIgnoreCase("Neurology"))
+                    .findFirst().orElse(null);
+            com.medicare.model.Department orthopedics = departmentRepository.findAll().stream()
+                    .filter(d -> d.getDepartmentName().equalsIgnoreCase("Orthopedics"))
+                    .findFirst().orElse(null);
+
+            // 3. Seed Doctor profiles if empty
+            if (doctorRepository.count() == 0) {
+                // Dr. Mithilesh
+                com.medicare.model.Doctor mithilesh = new com.medicare.model.Doctor();
+                mithilesh.setName("Dr. Mithilesh");
+                mithilesh.setEmail("mithilesh@medicare.com");
+                mithilesh.setQualification("MD, FACC");
+                mithilesh.setSpecialization("Interventional Cardiology");
+                mithilesh.setExperience(12);
+                mithilesh.setConsultationFee(500.0);
+                mithilesh.setAvailability("Monday, Wednesday, Friday (09:00 AM - 04:00 PM)");
+                mithilesh.setProfileImage("/images/mithilesh.jpeg");
+                mithilesh.setDepartment(cardiology);
+                doctorRepository.save(mithilesh);
+
+                // Dr. Hemanth
+                com.medicare.model.Doctor hemanth = new com.medicare.model.Doctor();
+                hemanth.setName("Dr. Hemanth");
+                hemanth.setEmail("hemanth@medicare.com");
+                hemanth.setQualification("MD, DM (Neurology)");
+                hemanth.setSpecialization("Stroke and Epilepsy Management");
+                hemanth.setExperience(10);
+                hemanth.setConsultationFee(500.0);
+                hemanth.setAvailability("Tuesday, Thursday (10:00 AM - 05:00 PM)");
+                hemanth.setProfileImage("/images/hemant.jpeg");
+                hemanth.setDepartment(neurology);
+                doctorRepository.save(hemanth);
+
+                // Dr. Rahul
+                com.medicare.model.Doctor rahul = new com.medicare.model.Doctor();
+                rahul.setName("Dr. Rahul");
+                rahul.setEmail("rahul@medicare.com");
+                rahul.setQualification("MS (Ortho), MCh");
+                rahul.setSpecialization("Joint Replacement Surgery");
+                rahul.setExperience(8);
+                rahul.setConsultationFee(500.0);
+                rahul.setAvailability("Wednesday, Friday (09:00 AM - 02:00 PM)");
+                rahul.setProfileImage("/images/rahul.jpeg");
+                rahul.setDepartment(orthopedics);
+                doctorRepository.save(rahul);
+
+                System.out.println("[BOOTSTRAP] Seeded default doctors");
+            }
+
+            // 4. Ensure Admin exists and has correct password hash
             userRepository.findByEmail("admin@medicare.com").ifPresentOrElse(
                 admin -> {
                     admin.setPassword(passwordEncoder.encode("password"));
@@ -50,7 +129,7 @@ public class MedicareApplication {
                 }
             );
 
-            // 2. Ensure default patient exists and has correct password hash
+            // 5. Ensure default patient exists and has correct password hash
             userRepository.findByEmail("john.doe@gmail.com").ifPresentOrElse(
                 patient -> {
                     patient.setPassword(passwordEncoder.encode("password"));
@@ -72,7 +151,7 @@ public class MedicareApplication {
                 }
             );
 
-            // 3. Ensure doctor logins exist and have correct password hashes
+            // 6. Ensure doctor logins exist and have correct password hashes
             String[] doctorEmails = {
                 "mithilesh@medicare.com",
                 "hemanth@medicare.com",
