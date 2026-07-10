@@ -68,7 +68,7 @@ public class AuthApiController {
                     .secure(isSecure)
                     .path("/")
                     .maxAge(86400) // 24 hours
-                    .sameSite(isSecure ? "None" : "Lax")
+                    .sameSite("Lax")
                     .build();
             response.addHeader(org.springframework.http.HttpHeaders.SET_COOKIE, cookie.toString());
 
@@ -94,7 +94,7 @@ public class AuthApiController {
                 .secure(isSecure)
                 .path("/")
                 .maxAge(0)
-                .sameSite(isSecure ? "None" : "Lax")
+                .sameSite("Lax")
                 .build();
         response.addHeader(org.springframework.http.HttpHeaders.SET_COOKIE, cookie.toString());
 
