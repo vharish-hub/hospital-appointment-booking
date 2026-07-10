@@ -41,7 +41,7 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 // Public paths
-                .requestMatchers("/", "/login", "/register", "/css/**", "/js/**", "/images/**", "/fragments/**").permitAll()
+                .requestMatchers("/", "/login", "/register", "/css/**", "/js/**", "/images/**", "/fragments/**", "/error").permitAll()
                 .requestMatchers("/doctors/**", "/departments/**", "/about", "/contact", "/book-appointment").permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/appointments/book", "/api/appointments/slots").permitAll()

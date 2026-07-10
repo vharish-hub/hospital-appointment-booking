@@ -30,10 +30,10 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     @Query("SELECT SUM(a.doctor.consultationFee) FROM Appointment a WHERE a.status = 'COMPLETED'")
     Double calculateTotalRevenue();
 
-    @Query("SELECT COUNT(a) FROM Appointment a WHERE FUNCTION('MONTH', a.appointmentDate) = :month AND FUNCTION('YEAR', a.appointmentDate) = :year")
+    @Query("SELECT COUNT(a) FROM Appointment a WHERE MONTH(a.appointmentDate) = :month AND YEAR(a.appointmentDate) = :year")
     Long countByMonthAndYear(@Param("month") int month, @Param("year") int year);
 
-    @Query("SELECT COALESCE(SUM(a.doctor.consultationFee), 0.0) FROM Appointment a WHERE a.status = 'COMPLETED' AND FUNCTION('MONTH', a.appointmentDate) = :month AND FUNCTION('YEAR', a.appointmentDate) = :year")
+    @Query("SELECT COALESCE(SUM(a.doctor.consultationFee), 0.0) FROM Appointment a WHERE a.status = 'COMPLETED' AND MONTH(a.appointmentDate) = :month AND YEAR(a.appointmentDate) = :year")
     Double calculateRevenueByMonthAndYear(@Param("month") int month, @Param("year") int year);
 
     @Query("SELECT a.doctor.department.departmentName, COUNT(a) FROM Appointment a GROUP BY a.doctor.department.departmentName")
