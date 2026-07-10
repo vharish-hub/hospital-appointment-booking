@@ -7,6 +7,7 @@ import com.medicare.model.User;
 import com.medicare.security.JwtTokenProvider;
 import com.medicare.service.UserService;
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,7 +50,7 @@ public class AuthApiController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest, HttpServletResponse response) {
+    public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest, HttpServletRequest request, HttpServletResponse response) {
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword())
@@ -61,11 +62,15 @@ public class AuthApiController {
             User userDetails = (User) authentication.getPrincipal();
 
             // Set HTTP-Only Cookie for Thymeleaf Web View Authentication
-            Cookie cookie = new Cookie("jwt_token", jwt);
-            cookie.setHttpOnly(true);
-            cookie.setPath("/");
-            cookie.setMaxAge(86400); // 24 hours
-            response.addCookie(cookie);
+            boolean isSecure = request.isSecure() || "https".equals(request.getHeader("X-Forwarded-Proto"));
+            org.springframework.http.ResponseCookie cookie = org.springframework.http.ResponseCookie.from("jwt_token", jwt)
+                    .httpOnly(true)
+                    .secure(isSecure)
+                    .path("/")
+                    .maxAge(86400) // 24 hours
+                    .sameSite(isSecure ? "None" : "Lax")
+                    .build();
+            response.addHeader(org.springframework.http.HttpHeaders.SET_COOKIE, cookie.toString());
 
             return ResponseEntity.ok(new JwtResponse(
                     jwt,
@@ -81,13 +86,17 @@ public class AuthApiController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logoutUser(HttpServletResponse response) {
+    public ResponseEntity<?> logoutUser(HttpServletRequest request, HttpServletResponse response) {
         // Clear HTTP-only authentication cookie
-        Cookie cookie = new Cookie("jwt_token", null);
-        cookie.setHttpOnly(true);
-        cookie.setPath("/");
-        cookie.setMaxAge(0);
-        response.addCookie(cookie);
+        boolean isSecure = request.isSecure() || "https".equals(request.getHeader("X-Forwarded-Proto"));
+        org.springframework.http.ResponseCookie cookie = org.springframework.http.ResponseCookie.from("jwt_token", "")
+                .httpOnly(true)
+                .secure(isSecure)
+                .path("/")
+                .maxAge(0)
+                .sameSite(isSecure ? "None" : "Lax")
+                .build();
+        response.addHeader(org.springframework.http.HttpHeaders.SET_COOKIE, cookie.toString());
 
         Map<String, String> result = new HashMap<>();
         result.put("message", "Logged out successfully");
